@@ -1,0 +1,4 @@
+interface:
+  display_name: "Article Illustrator"
+  short_description: "为 Markdown 文章规划、生成并精确插入语义配图"
+  default_prompt: "Use $article-illustrator to create an illustration plan for this Markdown article."
