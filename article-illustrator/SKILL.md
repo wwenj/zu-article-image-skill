@@ -1,79 +1,64 @@
 ---
 name: article-illustrator
-description: 分析已完成的 Markdown 文章，基于文章语义识别配图机会，生成可人工调整的插图计划和独立图片 Prompt，调用当前运行时原生 imagegen 生成插图，并使用唯一原文锚点精确插入文章。用于用户要求为文章配图、生成正文插图、分析文章插图位置或批量生成文章图片时。
+description: 为已完成的 Markdown 文章设计语义配图位置，将可直接编辑的自然语言生图 Prompt 作为隐藏标签插入文章；用户确认后扫描标签，调用当前运行时原生 imagegen 生成图片并插回文章。用于用户要求为文章配图、规划正文插图或根据文章内 Prompt 标签生成图片时。
 ---
 
 # Article Illustrator
 
-只为已经完成的 Markdown 文章规划、生成和插入语义配图。不要写作、润色、改写、发布文章，也不要修改正文内容。
+只负责为已经完成的 Markdown 文章设计、生成和插入配图。不要改写正文，不创建计划文件、Prompt 文件、任务 JSON 或状态文件。
 
-`{baseDir}` 表示本 `SKILL.md` 所在目录。调用脚本时使用 `{baseDir}/scripts/...`，并向 `--plan` 传入目标文章目录中的实际计划路径。
+`{baseDir}` 表示本 `SKILL.md` 所在目录。
 
 ## 硬约束
 
-- 不按字数、段落数或标题数量强行配图；没有明确视觉价值时输出无需配图。
-- 默认只生成 `imgs/illustration-plan.md`，然后停止并等待用户确认。
-- 只有用户当前请求明确要求直接生成或跳过确认时，才能自动批准任务。
-- 每个 Prompt 必须先保存到 `imgs/prompts/`，再调用生图工具。
-- 只使用当前运行时原生 `imagegen`。不可用时停止，不切换 CLI、API Provider、SVG、HTML 或 Canvas。
-- 不修补生成图片中的错误文字。文字、关系或构图存在风险时，将 `qa.status` 标记为 `needs_review`。
-- 所有插入位置必须使用原文中唯一存在的完整 Markdown 块。
-- 只插入经过 PNG 验证且 `generation.status: generated` 的图片。
+- 文章 Markdown 是唯一数据源。
+- Prompt 直接使用自然语言，保存在文章内的 `article-illustration` HTML 注释标签中。
+- 默认第一次执行只插入 Prompt 标签并总结方案，然后停止等待用户确认。
+- 用户确认后的下一次执行只读取现有标签，不重新分析或调整插图位置。
+- 只使用当前运行时原生 `imagegen`；不可用时停止，不切换 Provider、CLI、SVG、HTML 或 Canvas。
+- 默认只生成缺失图片。已有图片不会因 Prompt 修改自动重新生成。
+- 生成后保留 Prompt 标签，方便用户直接修改。
 
-## 工作流
+## 第一次执行：设计插图
 
-1. **分析文章**
-   - 读取完整文章并计算 SHA-256。
-   - 识别核心观点、流程、架构、对比和视觉隐喻。
-   - 读取 [illustration-types.md](references/illustration-types.md) 和 [visual-styles.md](references/visual-styles.md)。
+1. 读取完整文章，理解核心观点、流程、架构、对比和视觉隐喻。
+2. 读取 [illustration-types.md](references/illustration-types.md)、[visual-styles.md](references/visual-styles.md) 和 [prompt-guidelines.md](references/prompt-guidelines.md)。
+3. 只选择确实有助于理解的配图位置。
+4. 在对应正文位置后直接插入 [tag-format.md](references/tag-format.md) 定义的标签。
+5. 运行：
 
-2. **创建计划**
-   - 读取 [plan-schema.md](references/plan-schema.md)。
-   - 创建 `imgs/illustration-plan.md`，所有候选默认使用 `approval: pending`。
-   - 从文章复制完整且唯一的 Markdown 块作为 `insert_after`。
-     - 运行：
-     ```bash
-     python3 {baseDir}/scripts/validate_plan.py \
-       --plan <article-dir>/imgs/illustration-plan.md \
-       --stage plan
-     ```
-   - 未明确跳过确认时停止并等待用户修改计划。
+   ```bash
+   python3 {baseDir}/scripts/article_tags.py scan <article.md>
+   ```
 
-3. **保存 Prompt**
-   - 仅处理 `approval: approved` 的任务。
-   - 读取 [prompt-guidelines.md](references/prompt-guidelines.md)。
-   - 将每张图片的完整最终 Prompt 保存到计划指定的 `prompt_file`。
+6. 向用户总结插图数量、章节、插入位置和图片目的，然后停止。不要调用 `imagegen`。
 
-4. **准备生成任务**
-     - 运行：
-     ```bash
-     python3 {baseDir}/scripts/prepare_generation.py \
-       --plan <article-dir>/imgs/illustration-plan.md \
-       --output <article-dir>/imgs/generation-tasks.json
-     ```
+用户当前请求明确说“直接生成”“跳过确认”或同等含义时，可以继续执行生成阶段。
 
-5. **调用原生 imagegen**
-   - 读取 [generation-workflow.md](references/generation-workflow.md)。
-   - 每张图读取对应 Prompt 文件并单独调用一次原生 `imagegen`，每批最多 4 张。
-   - 将生成结果从运行时默认目录复制到任务的 `output_file`。
-   - 使用 `record_generation.py` 记录每项成功、失败和 QA 结果。
+## 确认后执行：生成并插入
 
-6. **插入文章**
-     - 运行：
-     ```bash
-     python3 {baseDir}/scripts/insert_images.py \
-       --plan <article-dir>/imgs/illustration-plan.md
-     ```
-   - 脚本会重新检查文章哈希、唯一锚点、PNG 和重复图片引用。
+1. 运行 `scan`，以文章现有标签为唯一任务来源：
 
-7. **报告**
-   - 分别报告 pending、approved、skip、生成成功、生成失败、needs_review、插入成功、已存在和插入失败数量。
-   - 对每个失败项报告阶段和原因。
+   ```bash
+   python3 {baseDir}/scripts/article_tags.py scan <article.md>
+   ```
 
-## 脚本约定
+2. 如果存在 `error`，先报告并停止，不猜测修复。
+3. 对每个 `needs_generation` 项：
+   - 读取 JSON 中的自然语言 `prompt` 和 `ratio`。
+   - 每张图单独调用一次原生 `imagegen`。
+   - 将结果复制到 JSON 中的绝对 `output_path`。
+   - 单张失败只报告该项，继续其他项。
+4. 生成完成后运行：
 
-脚本 stdout 输出 JSON，非零退出码表示存在错误。安装依赖：
+   ```bash
+   python3 {baseDir}/scripts/article_tags.py sync <article.md>
+   ```
 
-```bash
-python3 -m pip install -r {baseDir}/requirements.txt
-```
+5. 报告生成成功、失败、插入成功和已完成项。
+
+## 重新生成
+
+- 用户明确指定重新生成某个 `id` 时，可以覆盖对应 `imgs/{id}.png`。
+- 否则用户删除对应图片文件后，再次执行即可重新生成。
+- 仅修改 Prompt 不会自动覆盖已有图片。

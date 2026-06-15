@@ -1,39 +1,47 @@
 # zu-article-image-skill
 
-`article-illustrator` 是一个轻量 Codex Skill，用于分析已经完成的 Markdown 文章，规划有语义价值的插图，调用当前运行时原生 `imagegen` 生成图片，并使用唯一原文锚点稳定插入文章。
+`article-illustrator` 是一个极简 Codex Skill：直接在 Markdown 文章的插图位置保存可编辑的自然语言生图 Prompt，用户确认后调用原生 `imagegen` 生成图片并插回文章。
 
-## 设计边界
+## 核心流程
 
-- 只负责文章配图，不写作、不润色、不发布文章。
-- 默认先生成人工可编辑的 `imgs/illustration-plan.md`。
-- Agent 负责语义分析、Prompt 设计和原生生图调用。
-- Python 脚本负责计划校验、锚点定位、PNG 验证、状态回写和幂等插入。
-- 不内置图片 API Provider、API Key 配置、CLI fallback、SVG 或 HTML 渲染。
+```text
+第一次执行：
+分析文章 → 插入 Prompt 标签 → 总结方案 → 等待确认
 
-## 安装依赖
+确认后执行：
+扫描 Prompt 标签 → 原生 imagegen 生图 → 保存到 imgs/ → 插入图片引用
+```
+
+文章本身是唯一数据源，不创建计划文件、Prompt 文件、任务 JSON 或状态文件。
+
+## 标签示例
+
+```markdown
+<!-- article-illustration id="01-agent-runtime" ratio="16:9" alt="Agent 执行流程"
+创建一张用于技术文章的横向流程插图。
+
+展示请求依次经过 Router、Planner、Executor 和 Validator。
+使用从左到右的流程布局，蓝灰色技术风格，清晰箭头，保持充足留白。
+-->
+```
+
+生成后标签永久保留，并在后方插入：
+
+```markdown
+![Agent 执行流程](imgs/01-agent-runtime.png)
+```
+
+## 脚本
 
 ```bash
-python3 -m pip install -r article-illustrator/requirements.txt
+python3 article-illustrator/scripts/article_tags.py scan article.md
+python3 article-illustrator/scripts/article_tags.py sync article.md
 ```
 
-将 `article-illustrator/` 安装或链接到 Codex Skills 目录后，可使用：
+- `scan`：解析标签，输出待生成、待插入、已完成和错误项。
+- `sync`：将已经存在的图片引用插入对应标签后方。
 
-```text
-Use $article-illustrator to create an illustration plan for article.md.
-```
-
-默认流程：
-
-```text
-读取文章
-→ 生成计划
-→ 等待确认
-→ 保存独立 Prompt
-→ 调用原生 imagegen
-→ 验证 PNG
-→ 精确插入文章
-→ 输出报告
-```
+脚本只使用 Python 标准库，无额外依赖。
 
 ## 验证
 
@@ -43,15 +51,8 @@ python3 /Users/zu/.codex/skills/.system/skill-creator/scripts/quick_validate.py 
 git diff --check
 ```
 
-测试只覆盖确定性脚本和虚拟 PNG，不默认执行真实生图。
+不默认执行真实生图测试。
 
 ## 开源借鉴
 
-项目借鉴 [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) 中以下有价值的设计：
-
-- `baoyu-article-illustrator` 的 Type/Style 分离、确认门禁、Prompt 先落盘和真实术语驱动。
-- `prompt-construction.md` 的结构化区域、标签、关系、风格和比例描述。
-- `baoyu-image-gen` 的独立任务、失败隔离、重试边界和结构化结果。
-- `codex-imagegen/validator.ts` 的真实 PNG 文件验证。
-
-本项目不复制其多 Provider、EXTEND.md、Palette、水印、参考图库和复杂并发配置。
+项目保留 [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) 中有价值的语义配图设计：Type/Style 分离思路、真实术语驱动、自然语言 Prompt 的结构化表达，以及原生生图工具优先原则；不引入其多 Provider、配置系统和复杂状态管理。
