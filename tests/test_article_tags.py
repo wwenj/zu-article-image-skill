@@ -10,7 +10,7 @@ from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "article-illustrator" / "scripts" / "article_tags.py"
+SCRIPT_PATH = REPO_ROOT / "zu-article-image-skill" / "scripts" / "article_tags.py"
 sys.path.insert(0, str(SCRIPT_PATH.parent))
 
 import article_tags  # noqa: E402

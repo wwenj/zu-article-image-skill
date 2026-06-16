@@ -1,12 +1,12 @@
 <div align="center">
-  <h1>Article Illustrator Skill</h1>
-  <img src="assets/cover-no-text.png" alt="Article Illustrator cover" width="900">
+  <h1>zu-article-image-skill</h1>
+  <img src="assets/cover-no-text.png" alt="zu-article-image-skill cover" width="900">
   <p><strong>把 Markdown 文章里的配图意图，直接变成可编辑、可生成、可同步的文章内 Prompt。</strong></p>
 </div>
 
 > 说明：这个 skill 的一部分设计参考了 [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) 中语义配图的思路。当前版本已经按我的 Codex 写作工作流做了简化，更适合中文技术文章、观点稿、项目复盘和教程类 Markdown 的正文配图。
 
-Article Illustrator 是一个面向中文技术文章配图的 Codex skill。它不负责改写正文，也不维护额外配置层，而是在 Markdown 文章的插图位置保存可编辑的自然语言生图 Prompt。用户确认后，再扫描这些标签，调用当前运行时原生 `imagegen` 生成图片并插回文章。
+zu-article-image-skill 是一个面向中文技术文章配图的 Codex skill。它不负责改写正文，也不维护额外配置层，而是在 Markdown 文章的插图位置保存可编辑的自然语言生图 Prompt。用户确认后，再扫描这些标签，调用当前运行时原生 `imagegen` 生成图片并插回文章。
 
 它适合处理：
 
@@ -47,8 +47,8 @@ Article Illustrator 是一个面向中文技术文章配图的 Codex skill。它
 ## 脚本
 
 ```bash
-python3 article-illustrator/scripts/article_tags.py scan article.md
-python3 article-illustrator/scripts/article_tags.py sync article.md
+python3 zu-article-image-skill/scripts/article_tags.py scan article.md
+python3 zu-article-image-skill/scripts/article_tags.py sync article.md
 ```
 
 - `scan`：解析标签，输出待生成、待插入、已完成和错误项。
@@ -60,7 +60,7 @@ python3 article-illustrator/scripts/article_tags.py sync article.md
 
 ```bash
 python3 -m unittest discover -s tests -v
-python3 /Users/zu/.codex/skills/.system/skill-creator/scripts/quick_validate.py article-illustrator
+python3 /Users/zu/.codex/skills/.system/skill-creator/scripts/quick_validate.py zu-article-image-skill
 git diff --check
 ```
 

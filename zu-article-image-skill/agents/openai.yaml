@@ -1,0 +1,4 @@
+interface:
+  display_name: "zu-article-image-skill"
+  short_description: "在 Markdown 文章内规划 Prompt 标签并生成语义配图"
+  default_prompt: "Use $zu-article-image-skill to add editable illustration prompt tags to this Markdown article."

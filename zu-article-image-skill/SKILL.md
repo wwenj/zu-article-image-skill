@@ -1,9 +1,9 @@
 ---
-name: article-illustrator
+name: zu-article-image-skill
 description: 为已完成的 Markdown 文章设计语义配图位置，将可直接编辑的自然语言生图 Prompt 作为隐藏标签插入文章；用户确认后扫描标签，调用当前运行时原生 imagegen 生成图片并插回文章。用于用户要求为文章配图、规划正文插图或根据文章内 Prompt 标签生成图片时。
 ---
 
-# Article Illustrator
+# zu-article-image-skill
 
 只负责为已经完成的 Markdown 文章设计、生成和插入配图。不要改写正文，不创建计划文件、Prompt 文件、任务 JSON 或状态文件。
 
