@@ -1,6 +1,19 @@
-# zu-article-image-skill
+<div align="center">
+  <h1>Article Illustrator Skill</h1>
+  <img src="assets/cover-no-text.png" alt="Article Illustrator cover" width="900">
+  <p><strong>把 Markdown 文章里的配图意图，直接变成可编辑、可生成、可同步的文章内 Prompt。</strong></p>
+</div>
 
-`article-illustrator` 是一个极简 Codex Skill：直接在 Markdown 文章的插图位置保存可编辑的自然语言生图 Prompt，用户确认后调用原生 `imagegen` 生成图片并插回文章。
+> 说明：这个 skill 的一部分设计参考了 [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) 中语义配图的思路。当前版本已经按我的 Codex 写作工作流做了简化，更适合中文技术文章、观点稿、项目复盘和教程类 Markdown 的正文配图。
+
+Article Illustrator 是一个面向中文技术文章配图的 Codex skill。它不负责改写正文，也不维护额外配置层，而是在 Markdown 文章的插图位置保存可编辑的自然语言生图 Prompt。用户确认后，再扫描这些标签，调用当前运行时原生 `imagegen` 生成图片并插回文章。
+
+它适合处理：
+
+- 中文技术文章、观点长文、教程和项目复盘
+- 需要流程图、架构图、概念图、对比图的 Markdown 草稿
+- 已经写完正文，只缺少语义配图规划和生成的文章
+- 想直接在文章里维护插图 Prompt，而不是维护额外计划文件的写作流程
 
 ## 核心流程
 
