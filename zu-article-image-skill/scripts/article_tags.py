@@ -17,9 +17,11 @@ from typing import Any
 
 TAG_MARKER = "<!-- article-illustration"
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+STYLE_META_PATTERN = ID_PATTERN
 RATIO_PATTERN = re.compile(r"^(?P<width>\d+(?:\.\d+)?):(?P<height>\d+(?:\.\d+)?)$")
 ATTRIBUTE_PATTERN = re.compile(r'\s+([a-z]+)="([^"\r\n]*)"')
-ALLOWED_ATTRIBUTES = {"id", "ratio", "alt"}
+ALLOWED_ATTRIBUTES = {"id", "preset", "type", "style", "palette", "ratio", "alt"}
+STYLE_META_ATTRIBUTES = {"preset", "type", "style", "palette"}
 
 
 @dataclass
@@ -139,6 +141,10 @@ def parse_tags(text: str) -> tuple[list[ParsedTag], list[dict[str, Any]]]:
         if "alt" in attributes and not attributes["alt"].strip():
             tag_errors.append("alt must not be empty when provided.")
 
+        for key in sorted(STYLE_META_ATTRIBUTES):
+            if key in attributes and not STYLE_META_PATTERN.fullmatch(attributes[key]):
+                tag_errors.append(f"{key} must contain only lowercase letters, digits, and hyphens.")
+
         tags.append(
             ParsedTag(
                 start=start,
@@ -218,6 +224,10 @@ def scan_article(article: Path) -> dict[str, Any]:
         items.append(
             {
                 "id": tag_id or None,
+                "preset": tag.attributes.get("preset") or None,
+                "type": tag.attributes.get("type") or None,
+                "style": tag.attributes.get("style") or None,
+                "palette": tag.attributes.get("palette") or None,
                 "ratio": ratio,
                 "alt": alt,
                 "prompt": tag.prompt,

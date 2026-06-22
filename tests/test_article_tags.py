@@ -19,11 +19,23 @@ import article_tags  # noqa: E402
 def tag(
     tag_id: str = "01-agent-runtime",
     *,
+    preset: str | None = None,
+    image_type: str | None = None,
+    style: str | None = None,
+    palette: str | None = None,
     ratio: str | None = "16:9",
     alt: str | None = "Agent 执行流程",
     prompt: str = "创建一张横向流程插图。\n\n展示 Router、Planner 和 Executor。",
 ) -> str:
     attributes = [f'id="{tag_id}"']
+    if preset is not None:
+        attributes.append(f'preset="{preset}"')
+    if image_type is not None:
+        attributes.append(f'type="{image_type}"')
+    if style is not None:
+        attributes.append(f'style="{style}"')
+    if palette is not None:
+        attributes.append(f'palette="{palette}"')
     if ratio is not None:
         attributes.append(f'ratio="{ratio}"')
     if alt is not None:
@@ -71,10 +83,54 @@ class ScanTests(unittest.TestCase):
             article = root / "article.md"
             article.write_text(article_with(tag("simple", ratio=None, alt=None)), encoding="utf-8")
             item = article_tags.scan_article(article)["items"][0]
+            self.assertIsNone(item["preset"])
+            self.assertIsNone(item["type"])
+            self.assertIsNone(item["style"])
+            self.assertIsNone(item["palette"])
             self.assertEqual(item["ratio"], "16:9")
             self.assertEqual(item["alt"], "文章插图 simple")
             self.assertEqual(item["image_path"], "imgs/simple.png")
             self.assertEqual(item["output_path"], str((root / "imgs/simple.png").resolve()))
+
+    def test_scans_optional_style_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            article = root / "article.md"
+            article.write_text(
+                article_with(
+                    tag(
+                        "flow",
+                        preset="process-flow",
+                        image_type="flowchart",
+                        style="sketch-notes",
+                        palette="macaron",
+                    )
+                ),
+                encoding="utf-8",
+            )
+            result = article_tags.scan_article(article)
+            item = result["items"][0]
+            self.assertTrue(result["valid"])
+            self.assertEqual(item["preset"], "process-flow")
+            self.assertEqual(item["type"], "flowchart")
+            self.assertEqual(item["style"], "sketch-notes")
+            self.assertEqual(item["palette"], "macaron")
+
+    def test_reports_invalid_style_metadata(self) -> None:
+        cases = {
+            "preset-uppercase": tag("one", preset="Process-Flow"),
+            "type-space": tag("one", image_type="flow chart"),
+            "style-underscore": tag("one", style="sketch_notes"),
+            "palette-empty": tag("one", palette=""),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name, content in cases.items():
+                article = root / f"{name}.md"
+                article.write_text(article_with(content), encoding="utf-8")
+                result = article_tags.scan_article(article)
+                self.assertFalse(result["valid"], name)
+                self.assertIn("must contain only lowercase letters", " ".join(result["items"][0]["errors"]))
 
     def test_reports_duplicate_invalid_empty_unclosed_and_inline_close(self) -> None:
         cases = {

@@ -1,18 +1,17 @@
 <div align="center">
   <h1>zu-article-image-skill</h1>
   <img src="assets/cover-no-text.png" alt="zu-article-image-skill cover" width="900">
-  <p><strong>给 Markdown 文章加语义配图：先生成可编辑 Prompt，再生成图片并回写正文。</strong></p>
+  <p><strong>给 Markdown 文章加语义配图：1. 先生成可编辑 Prompt；2. 再生成图片并回写正文。</strong></p>
 </div>
 
 ## 解决的问题
 
-给文章配图，难点通常不是调用生图工具，而是准确表达“这里应该配什么图”。
+1. 在什么地方配插图
+2. 配什么样的插图
 
-直接把整篇文章丢给模型生图，不确定性高：模型可能选错重点、忽略上下文，生成结果一旦偏离预期，通常只能反复重试。手写 Prompt 可控性更强，但需要理解画面构图、视觉风格、比例和生图模型偏好，成本也高。
+这个 skill 把配图流程拆成两步：
 
-这个 skill 把流程拆成两步：
-
-1. 先根据文章结构，在正文里插入可检查、可修改的配图 Prompt。
+1. 先根据文章结构，在正文里插入可检查、可修改的插图预渲染 Prompt 标签。
 2. 用户确认后，再根据这些 Prompt 生成图片，保存到 `imgs/`，并把图片引用插回原位置。
 
 文章 Markdown 是唯一数据源。不创建计划文件、Prompt 文件、任务 JSON 或额外状态文件。
@@ -25,7 +24,7 @@
 2. 梳理章节结构、上下文关系和信息密度。
 3. 选择确实有助于理解的插图位置。
 4. 在对应位置插入 `article-illustration` HTML 注释标签。
-5. 在标签内写入自然语言 Prompt。
+5. 自动选择合适的 `preset/type/style/palette`，并在标签内写入完整自然语言 Prompt。
 6. 总结插图方案，等待用户确认。
 
 确认后才进入生图层：
@@ -70,7 +69,7 @@ Skill 来源是 [`wwenj/zu-article-image-skill`](https://github.com/wwenj/zu-art
 ## 标签示例
 
 ```markdown
-<!-- article-illustration id="01-agent-runtime" ratio="16:9" alt="Agent 执行流程"
+<!-- article-illustration id="01-agent-runtime" preset="process-flow" type="flowchart" style="sketch-notes" palette="macaron" ratio="16:9" alt="Agent 执行流程"
 创建一张用于技术文章的横向流程插图。
 
 展示请求依次经过 Router、Planner、Executor 和 Validator。
@@ -79,3 +78,5 @@ Skill 来源是 [`wwenj/zu-article-image-skill`](https://github.com/wwenj/zu-art
 
 ![Agent 执行流程](imgs/01-agent-runtime.png)
 ```
+
+`preset/type/style/palette` 只是用户可读的样式记录，真正用于生图的是标签正文里的完整 Prompt。第一次执行结束后，skill 会总结每张图的位置、目的和样式；用户确认后才继续生成图片，不满意可以直接改标签内 Prompt 或要求换成其他 preset。

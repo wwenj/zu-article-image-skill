@@ -1,6 +1,6 @@
 ---
 name: zu-article-image-skill
-description: 为已完成的 Markdown 文章设计语义配图位置，将可直接编辑的自然语言生图 Prompt 作为隐藏标签插入文章；用户确认后扫描标签，调用当前运行时原生 imagegen 生成图片并插回文章。用于用户要求为文章配图、规划正文插图或根据文章内 Prompt 标签生成图片时。
+description: 为已完成的 Markdown 文章设计语义配图位置，按内置 preset/type/style/palette 样式体系生成可编辑自然语言生图 Prompt，并作为隐藏标签插入文章；用户确认后扫描标签，调用当前运行时原生 imagegen 生成图片并插回文章。用于用户要求为文章配图、规划正文插图、调整文章插图风格或根据文章内 Prompt 标签生成图片时。
 ---
 
 # zu-article-image-skill
@@ -15,25 +15,41 @@ description: 为已完成的 Markdown 文章设计语义配图位置，将可直
 - Prompt 直接使用自然语言，保存在文章内的 `article-illustration` HTML 注释标签中。
 - 默认第一次执行只插入 Prompt 标签并总结方案，然后停止等待用户确认。
 - 用户确认后的下一次执行只读取现有标签，不重新分析或调整插图位置。
+- 默认由 Agent 根据文章自主选择 preset/type/style/palette；用户明确指定时优先用户。
 - 只使用当前运行时原生 `imagegen`；不可用时停止，不切换 Provider、CLI、SVG、HTML 或 Canvas。
 - 默认只生成缺失图片。已有图片不会因 Prompt 修改自动重新生成。
 - 生成后保留 Prompt 标签，方便用户直接修改。
+- 不创建 `EXTEND.md`、`outline.md`、独立 Prompt 文件、任务 JSON 或状态文件。
 
 ## 第一次执行：设计插图
 
 1. 读取完整文章，理解核心观点、流程、架构、对比和视觉隐喻。
-2. 读取 [illustration-types.md](references/illustration-types.md)、[visual-styles.md](references/visual-styles.md) 和 [prompt-guidelines.md](references/prompt-guidelines.md)。
-3. 只选择确实有助于理解的配图位置。
-4. 在对应正文位置后直接插入 [tag-format.md](references/tag-format.md) 定义的标签。
-5. 运行：
+2. 读取 [presets.md](references/presets.md)、[illustration-types.md](references/illustration-types.md)、[visual-styles.md](references/visual-styles.md)、[prompt-templates.md](references/prompt-templates.md) 和 [prompt-guidelines.md](references/prompt-guidelines.md)。
+3. 根据文章内容自动选择合适的 preset/type/style/palette；用户请求里明确指定的风格、样式或 palette 优先。
+4. 只选择确实有助于理解的配图位置。
+5. 在对应正文位置后直接插入 [tag-format.md](references/tag-format.md) 定义的标签。
+   - 标签可带 `preset`、`type`、`style`、`palette` 元数据。
+   - 标签正文必须写完整自然语言 Prompt，不能只写 preset 名称。
+   - Prompt 必须包含图片目的、布局、内容关系、风格、色彩语义、文字限制和比例。
+6. 运行：
 
    ```bash
    python3 {baseDir}/scripts/article_tags.py scan <article.md>
    ```
 
-6. 向用户总结插图数量、章节、插入位置和图片目的，然后停止。不要调用 `imagegen`。
+7. 向用户总结插图数量、章节、插入位置、图片目的、`preset`、`type`、`style`、`palette` 和 `ratio`，然后停止。不要调用 `imagegen`。
+8. 总结末尾必须提示：
+   - 确认后可以继续生成图片并 sync 回正文。
+   - 不满意可以直接编辑文章内的 `article-illustration` Prompt。
+   - 也可以要求重新执行某个风格或样式，并列出可选 preset：`hand-drawn-edu`、`tech-blueprint`、`process-flow`、`side-by-side`、`ink-notes`、`editorial-data`、`poster-opinion`、`warm-scene`。
 
 用户当前请求明确说“直接生成”“跳过确认”或同等含义时，可以继续执行生成阶段。
+
+## 风格重选
+
+- 用户要求换风格、换样式、换 preset 或重新生成 Prompt 时，只更新文章内已有 `article-illustration` 标签的元数据和 Prompt。
+- 风格重选不调用 `imagegen`，不覆盖已有图片。
+- 更新后运行 `scan` 并再次按第一次执行的总结格式说明变化。
 
 ## 确认后执行：生成并插入
 

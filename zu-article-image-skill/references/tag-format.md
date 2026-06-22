@@ -5,7 +5,7 @@
 将标签直接放在需要插图的位置：
 
 ```markdown
-<!-- article-illustration id="01-agent-runtime" ratio="16:9" alt="Agent 执行流程"
+<!-- article-illustration id="01-agent-runtime" preset="process-flow" type="flowchart" style="sketch-notes" palette="macaron" ratio="16:9" alt="Agent 执行流程"
 创建一张用于技术文章的横向流程插图。
 
 展示请求依次经过 Router、Planner、Executor 和 Validator。
@@ -22,9 +22,15 @@
 ## 属性
 
 - `id`：必填且文章内唯一；只允许小写字母、数字和连字符。图片固定保存为 `imgs/{id}.png`。
+- `preset`：可选；记录 Agent 使用的样式组合，例如 `process-flow`。
+- `type`：可选；记录图片信息结构，例如 `flowchart`、`framework`、`comparison`。
+- `style`：可选；记录视觉风格，例如 `sketch-notes`、`blueprint`。
+- `palette`：可选；记录色彩方案，例如 `macaron`、`mono-ink`。
 - `ratio`：可选，默认 `16:9`；格式为正数 `width:height`。
 - `alt`：可选；缺失时使用 `文章插图 {id}`。
 - 标签正文：必填自然语言 Prompt。
+
+`preset`、`type`、`style`、`palette` 只允许小写字母、数字和连字符。它们只是用户可读元数据；真正用于生图的是标签正文里的完整 Prompt。
 
 标签开始和结束标记必须各自独占一行。Prompt 禁止包含 `-->`。
 
@@ -43,4 +49,3 @@ python3 scripts/article_tags.py sync article.md
 ```
 
 `scan` 只读取文章并输出 JSON。`sync` 只插入已存在图片的引用，不调用生图工具。
-
