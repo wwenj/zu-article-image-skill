@@ -35,6 +35,97 @@
 4. `sync` 把 `![alt](imgs/{id}.png)` 插回对应标签后方。
 5. 保留 Prompt 标签，方便后续微调和重新生成。
 
+## 技术方案
+
+### 1. Markdown 是唯一状态源
+
+所有配图信息都保存在原文章里，不额外创建计划文件、Prompt 文件、任务 JSON 或状态文件。
+
+- Prompt 中间态：`article-illustration` HTML 注释标签。
+- 图片输出：固定保存为 `imgs/{id}.png`。
+- 图片引用：生成后插回为 `![alt](imgs/{id}.png)`。
+- 后续微调：直接改文章里的 Prompt 标签即可。
+
+### 2. 内置样式体系
+
+Agent 不直接把文章丢给生图模型，而是先参考 `references/` 里的样式规则，把文章内容转成更稳定的插图 Prompt。
+
+内置能力分为四层：
+
+| 层级 | 作用 | 示例 |
+| --- | --- | --- |
+| `preset` | 一组常用样式组合 | `hand-drawn-edu`、`tech-blueprint`、`process-flow` |
+| `type` | 决定信息结构 | `infographic`、`flowchart`、`comparison`、`framework`、`scene`、`timeline` |
+| `style` | 决定画面语言 | `sketch-notes`、`blueprint`、`vector-illustration`、`ink-notes`、`editorial`、`screen-print`、`warm` |
+| `palette` | 决定色彩语义 | `macaron`、`technical-blue`、`balanced`、`mono-ink`、`poster-duotone`、`warm-soft` |
+
+当前内置 8 个 preset 场景：
+
+- `hand-drawn-edu`：知识总结、教程、概念解释。
+- `tech-blueprint`：系统架构、工程设计、模块关系。
+- `process-flow`：步骤、执行链路、工作流。
+- `side-by-side`：Before/After、方案差异、优劣对比。
+- `ink-notes`：观点文、方法论、专业白板。
+- `editorial-data`：数据、指标、报告结论。
+- `poster-opinion`：强观点、社评、戏剧化隐喻。
+- `warm-scene`：叙事、个人经历、温和场景表达。
+
+### 3. 生成中间态标签
+
+第一次执行时，Agent 会读取文章结构，选择真正需要配图的位置，并插入类似这样的标签：
+
+```markdown
+<!-- article-illustration id="01-agent-runtime" preset="process-flow" type="flowchart" style="sketch-notes" palette="macaron" ratio="16:9" alt="Agent 执行流程"
+创建一张用于技术文章的横向流程图，帮助读者理解 Agent 请求从输入到输出的执行链路。
+
+Layout: 从左到右的五段流程，整体保持充足留白。
+Content: 用户输入、Router、Planner、Executor、Validator 和最终答案。
+Style: sketch-notes 手绘教育信息图风格，暖色纸张背景，黑色手绘线条。
+Palette: macaron。浅蓝表示系统模块，薄荷绿表示成功输出，珊瑚红只用于风险提示。颜色名和 hex 值不要显示在图片中。
+Text: 只使用中文短标签，保持大字号和清晰可读。
+Aspect: 16:9。
+-->
+```
+
+其中 `preset/type/style/palette/ratio/alt` 是可读元数据，真正交给生图模型的是标签正文里的完整自然语言 Prompt。
+
+### 4. 确认后生成图片
+
+第一次只生成 Prompt，不生成图片。Agent 会总结每张图的位置、目的和样式，用户可以：
+
+- 确认继续：进入生图阶段。
+- 手动微调：直接编辑标签里的 Prompt。
+- 重选样式：要求换成其他 preset 或 style 后重新生成 Prompt。
+
+确认后，Agent 执行：
+
+```bash
+python3 zu-article-image-skill/scripts/article_tags.py scan article.md
+```
+
+然后只读取 `scan` 输出里的 `needs_generation` 项，逐张调用当前运行时原生 `imagegen`，并把结果保存到对应的 `output_path`。
+
+### 5. 状态机与回插
+
+`scripts/article_tags.py` 只负责确定性扫描和同步，不负责生图。
+
+`scan` 会根据标签和图片文件计算状态：
+
+| 状态 | 含义 |
+| --- | --- |
+| `needs_generation` | 标签存在，但 `imgs/{id}.png` 不存在 |
+| `needs_insertion` | 图片存在，但文章里还没有 Markdown 图片引用 |
+| `complete` | 图片文件和 Markdown 图片引用都存在 |
+| `error` | 标签非法、ID 重复或图片引用重复 |
+
+图片生成完成后执行：
+
+```bash
+python3 zu-article-image-skill/scripts/article_tags.py sync article.md
+```
+
+`sync` 会把图片引用插入对应标签后方，并保留原 Prompt 标签，方便以后继续调整或重新生成。
+
 ## 适合场景
 
 - 中文技术文章、教程、观点长文和项目复盘
@@ -65,20 +156,6 @@ Skill 来源是 [`wwenj/zu-article-image-skill`](https://github.com/wwenj/zu-art
 ```text
 根据文章内已有 `article-illustration` 标签生成图片。
 ```
-
-## 中间态插图预渲染 Prompt 标签示例
-
-```markdown
-<!-- article-illustration id="01-agent-runtime" preset="process-flow" type="flowchart" style="sketch-notes" palette="macaron" ratio="16:9" alt="Agent 执行流程"
-创建一张用于技术文章的横向流程插图。
-
-展示请求依次经过 Router、Planner、Executor 和 Validator。
-使用从左到右的流程布局，蓝灰色技术风格，清晰箭头，保持充足留白。
--->
-
-![Agent 执行流程](imgs/01-agent-runtime.png)
-```
-
 ## 同类 Skill 关联推荐
 
 文章完成后，插图前，可使用下面 Skill 做文章整理，主要针对去除 AI 味结构和语句，让文章更符合人类工程师写作习惯。
