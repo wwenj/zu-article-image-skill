@@ -54,19 +54,19 @@ Skill 来源是 [`wwenj/zu-article-image-skill`](https://github.com/wwenj/zu-art
 
 ## 使用方式
 
-规划配图时，只让 skill 插入 Prompt 标签，不直接生成图片：
+直接一句话例如在 codex 中输入以下配图提示词：
 
 ```text
-使用 zu-article-image-skill 为 path/to/article.md 规划配图，只插入 Prompt 标签，不生成图片。
+使用 zu-article-image-skill 为 article.md 规划配图
 ```
 
-确认 Prompt 后，再继续要求：
+生成好中间提示词后，确认无误让 codex 继续生成图片：
 
 ```text
-根据文章内已有 `article-illustration` 标签生成图片，并 sync 回正文。
+根据文章内已有 `article-illustration` 标签生成图片。
 ```
 
-## 标签示例
+## 中间态插图预渲染 Prompt 标签示例
 
 ```markdown
 <!-- article-illustration id="01-agent-runtime" preset="process-flow" type="flowchart" style="sketch-notes" palette="macaron" ratio="16:9" alt="Agent 执行流程"
@@ -79,4 +79,8 @@ Skill 来源是 [`wwenj/zu-article-image-skill`](https://github.com/wwenj/zu-art
 ![Agent 执行流程](imgs/01-agent-runtime.png)
 ```
 
-`preset/type/style/palette` 只是用户可读的样式记录，真正用于生图的是标签正文里的完整 Prompt。第一次执行结束后，skill 会总结每张图的位置、目的和样式；用户确认后才继续生成图片，不满意可以直接改标签内 Prompt 或要求换成其他 preset。
+## 同类 Skill 关联推荐
+
+文章完成后，插图前，可使用下面 Skill 做文章整理，主要针对去除 AI 味结构和语句，让文章更符合人类工程师写作习惯。
+
+[zu-article-image-skill](https://github.com/wwenj/zu-article-image-skill)
