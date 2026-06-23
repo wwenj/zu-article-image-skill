@@ -1,4 +1,5 @@
 <div align="center">
+  <p><strong>中文</strong> | <a href="README.en.md">English</a></p>
   <h1>zu-article-image-skill</h1>
   <img src="assets/cover-no-text.png" alt="zu-article-image-skill cover" width="900">
   <p><strong>给 Markdown 文章加语义配图：先生成可编辑 Prompt，再生成图片并回写正文。</strong></p>
