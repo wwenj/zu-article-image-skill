@@ -167,4 +167,4 @@ Download the repository from https://github.com/wwenj/zu-article-image-skill, th
 
 After the article is finished and before adding illustrations, you can use the skill below to polish the article. It focuses on removing AI-like structure and phrasing so the writing feels closer to how a human engineer writes.
 
-[zu-article-image-skill](https://github.com/wwenj/zu-article-image-skill)
+[zu-article-polisher-skill](https://github.com/wwenj/zu-article-polisher-skill)

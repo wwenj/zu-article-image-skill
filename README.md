@@ -167,4 +167,4 @@ Skill 来源是 [`wwenj/zu-article-image-skill`](https://github.com/wwenj/zu-art
 
 文章完成后，插图前，可使用下面 Skill 做文章整理，主要针对去除 AI 味结构和语句，让文章更符合人类工程师写作习惯。
 
-[zu-article-image-skill](https://github.com/wwenj/zu-article-image-skill)
+[zu-article-polisher-skill](https://github.com/wwenj/zu-article-polisher-skill)
