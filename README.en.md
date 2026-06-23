@@ -1,7 +1,7 @@
 <div align="center">
   <p><a href="README.md">中文</a> | <strong>English</strong></p>
   <h1>zu-article-image-skill</h1>
-  <img src="assets/cover-no-text.png" alt="zu-article-image-skill cover" width="900">
+  <img src="assets/cover-no-text.png" alt="zu-article-image-skill logo" width="320">
   <p><strong>Add semantic illustrations to Markdown articles: draft editable prompts first, then generate images and write them back into the article.</strong></p>
 </div>
 
